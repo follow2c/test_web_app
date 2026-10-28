@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우리 반 분리수거 마스터</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#fe4e00',
+                            secondary: '#ddfcad',
+                            accent: '#9046cf',
+                            dark: '#1a1a1a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Noto Sans KR -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom scrollbar for mobile feel */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased font-sans min-h-screen flex flex-col">
+
+    <!-- Top Navigation Header (Fully Responsive Bar) -->
+    <header class="bg-[#fe4e00] text-white px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-md sticky top-0 z-30 shrink-0">
+        <h1 class="text-lg sm:text-xl font-black flex items-center gap-2 cursor-pointer select-none" onclick="navigateTo('home')">
+            <span class="material-symbols-outlined text-2xl sm:text-3xl">eco</span>
+            <span>우리 반 분리수거 마스터</span>
+        </h1>
+        <div class="flex items-center gap-2">
+            <button onclick="navigateTo('add')" class="bg-white text-[#fe4e00] px-3.5 py-1.5 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1 hover:bg-orange-100 transition active:scale-95 shadow-xs">
+                <span class="material-symbols-outlined text-base">add</span>
+                <span class="hidden sm:inline">직접 등록</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Responsive Layout Area -->
+    <main class="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-6 pb-24">
+        <div id="main-content" class="w-full">
+            <!-- Dynamic view screens will be injected here via JS -->
+        </div>
+    </main>
+
+    <!-- Bottom Mobile Nav Bar (Fixed on mobile/tablet) -->
+    <nav class="bg-white border-t border-gray-200 py-2.5 px-6 flex justify-around items-center fixed bottom-0 left-0 right-0 z-20 shadow-lg max-w-4xl mx-auto md:rounded-t-2xl">
+        <button onclick="navigateTo('home')" id="nav-home" class="flex flex-col items-center gap-0.5 text-[#fe4e00] transition active:scale-90">
+            <span class="material-symbols-outlined text-2xl">home</span>
+            <span class="text-[11px] font-bold">홈</span>
+        </button>
+        <button onclick="navigateTo('search')" id="nav-search" class="flex flex-col items-center gap-0.5 text-gray-400 transition active:scale-90">
+            <span class="material-symbols-outlined text-2xl">search</span>
+            <span class="text-[11px] font-medium">검색/목록</span>
+        </button>
+        <button onclick="navigateTo('add')" id="nav-add" class="flex flex-col items-center gap-0.5 text-gray-400 transition active:scale-90">
+            <span class="material-symbols-outlined text-2xl">add_circle</span>
+            <span class="text-[11px] font-medium">등록하기</span>
+        </button>
+    </nav>
+
+    <!-- Custom Modal Toast/Notification -->
+    <div id="toast" class="fixed top-16 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-2.5 rounded-full text-xs font-medium opacity-0 pointer-events-none transition-all duration-300 shadow-xl z-50 flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm text-[#ddfcad]">check_circle</span>
+        <span id="toast-message">알림 메시지</span>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Mock Data Store for Garbage/Recycling Items
+        let garbageItems = [
+            {
+                id: 1,
+                name: "음료수 플라스틱 캔/병",
+                category: "플라스틱",
+                method: "1. 내용물을 깨끗이 비우고 물로 헹굽니다.\n2. 라벨 비닐을 떼어 비닐류에 버립니다.\n3. 뚜껑을 닫고 플라스틱 함에 배출합니다.",
+                tip: "상표 라벨 비닐을 꼭 떼어주는 것이 핵심입니다!",
+                color: "bg-blue-100 text-blue-800",
+                icon: "local_drink"
+            },
+            {
+                id: 2,
+                name: "컵라면 종이용기",
+                category: "일반쓰레기 / 종이",
+                method: "1. 국물 자국이 심하게 남아 빨갛게 물든 용기는 재활용이 불가능하므로 '일반쓰레기'에 버립니다.\n2. 깨끗이 씻긴 깨끗한 종이용기만 종이류로 배출합니다.",
+                tip: "음식물이 든 채로 버리면 악취의 원인이 돼요!",
+                color: "bg-red-100 text-red-800",
+                icon: "ramen_dining"
+            },
+            {
+                id: 3,
+                name: "우유팩 / 팩음료",
+                category: "종이팩",
+                method: "1. 빨대를 뺀 후 빨대는 '플라스틱'에 버립니다.\n2. 우유팩을 잘라 내부를 물로 헹구고 건조시킵니다.\n3. 펼쳐서 종이팩 전용함에 배출합니다.",
+                tip: "빨대 감싸는 비닐은 비닐류에 따로 배출하세요.",
+                color: "bg-emerald-100 text-emerald-800",
+                icon: "nutrition"
+            },
+            {
+                id: 4,
+                name: "과자 봉지 / 라면 봉지",
+                category: "비닐류",
+                method: "1. 봉지 안의 과자 부스러기와 먼지를 털어냅니다.\n2. 이물질이 묻은 경우 물로 가볍게 씻어 말립니다.\n3. 딱지 모양으로 접지 말고 평평하게 접어 비닐 수거함에 버립니다.",
+                tip: "딱지로 접어 버리면 재활용 분류 기계가 인식하기 어려워요!",
+                color: "bg-purple-100 text-purple-800",
+                icon: "inventory_2"
+            }
+        ];
+
+        let currentDetailId = 1;
+
+        // Toast Notification Helper
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = message;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // Update Active Nav Bar Styling
+        function updateNavState(activeScreen) {
+            ['home', 'search', 'add'].forEach(key => {
+                const navBtn = document.getElementById(`nav-${key}`);
+                if (navBtn) {
+                    if (key === activeScreen) {
+                        navBtn.className = "flex flex-col items-center gap-0.5 text-[#fe4e00] font-bold transition active:scale-90";
+                    } else {
+                        navBtn.className = "flex flex-col items-center gap-0.5 text-gray-400 font-normal transition active:scale-90";
+                    }
+                }
+            });
+        }
+
+        // Navigation Controller
+        function navigateTo(screen, param = null) {
+            const main = document.getElementById('main-content');
+            updateNavState(screen);
+
+            if (screen === 'home') {
+                renderHome(main);
+            } else if (screen === 'search') {
+                renderSearchList(main, param || '');
+            } else if (screen === 'add') {
+                renderAddForm(main);
+            } else if (screen === 'detail') {
+                renderDetail(main, param);
+            }
+        }
+
+        // 1. Home Screen (Responsive Cards Grid)
+        function renderHome(container) {
+            container.innerHTML = `
+                <div class="space-y-5">
+                    <!-- Title Banner -->
+                    <div class="bg-[#ddfcad] p-6 rounded-3xl border-2 border-[#fe4e00]/20 shadow-xs text-center md:text-left md:flex md:items-center md:justify-between">
+                        <div>
+                            <span class="text-xs font-bold text-[#9046cf] bg-white px-3 py-1 rounded-full uppercase tracking-wider inline-block mb-2 shadow-2xs">쉬는 시간 3초 가이드</span>
+                            <h2 class="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">우리 반 분리수거 마스터</h2>
+                            <p class="text-xs sm:text-sm text-gray-700 mt-1 font-medium">고등학생 쉬는 시간을 위한 빠르고 명확한 분리배출 가이드</p>
+                        </div>
+                        <div class="hidden md:block">
+                            <span class="material-symbols-outlined text-6xl text-[#9046cf]/80">eco</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Cards Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Main Action Card 1: 사진 찍기 (AI/카메라 인식 가상 버튼) -->
+                        <div onclick="simulatedPhotoScan()" class="bg-gradient-to-r from-[#fe4e00] to-orange-500 text-white p-6 rounded-3xl shadow-md cursor-pointer hover:opacity-95 active:scale-98 transition flex items-center gap-4 border border-orange-400">
+                            <!-- 이미지가 없거나 로드 실패 시 아이콘 또는 깔끔한 빈 자릿값 fallback 처리 -->
+                            <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center shrink-0 backdrop-blur-sm overflow-hidden">
+                                <img src="scan_icon.png" alt="" onerror="this.onerror=null; this.remove();" class="w-full h-full object-cover hidden">
+                                <span class="material-symbols-outlined text-4xl text-white">photo_camera</span>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-extrabold">사진 찍기 / 스캔</h3>
+                                <p class="text-xs text-orange-100 mt-0.5">쓰레기를 카메라로 촬영하면 1초 만에 배출 방법을 파악해요!</p>
+                            </div>
+                        </div>
+
+                        <!-- Main Action Card 2: 검색 페이지 -->
+                        <div onclick="navigateTo('search')" class="bg-white p-6 rounded-3xl shadow-xs border border-gray-100 cursor-pointer hover:border-[#fe4e00] active:scale-98 transition flex items-center justify-between">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 bg-purple-100 text-[#9046cf] rounded-2xl flex items-center justify-center shrink-0 overflow-hidden">
+                                    <img src="search_icon.png" alt="" onerror="this.onerror=null; this.remove();" class="w-full h-full object-cover hidden">
+                                    <span class="material-symbols-outlined text-3xl">search</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-extrabold text-gray-800 text-base">검색으로 찾기</h3>
+                                    <p class="text-xs text-gray-500 mt-0.5">헷갈리는 쓰레기 이름을 직접 검색해서 확인하세요</p>
+                                </div>
+                            </div>
+                            <span class="material-symbols-outlined text-gray-400">chevron_right</span>
+                        </div>
+                    </div>
+
+                    <!-- Main Action Card 3: 세부 페이지 목록 / 자주 찾는 품목 -->
+                    <div class="bg-white p-5 sm:p-6 rounded-3xl shadow-xs border border-gray-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-800 text-sm sm:text-base flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-lg text-[#fe4e00]">star</span>
+                                자주 버리는 쓰레기 안내
+                            </h3>
+                            <button onclick="navigateTo('search')" class="text-xs text-[#9046cf] font-bold hover:underline">전체보기</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            ${garbageItems.slice(0, 4).map(item => `
+                                <div onclick="navigateTo('detail', ${item.id})" class="p-4 bg-gray-50 hover:bg-orange-50/50 rounded-2xl border border-gray-100 cursor-pointer transition active:scale-95 flex flex-col justify-between h-32">
+                                    <div class="flex justify-between items-start">
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full w-fit ${item.color}">${item.category}</span>
+                                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="" onerror="this.remove();" class="w-8 h-8 object-cover rounded-lg">` : ''}
+                                    </div>
+                                    <h4 class="font-bold text-gray-800 text-xs sm:text-sm mt-2 line-clamp-2">${item.name}</h4>
+                                    <span class="text-[10px] text-gray-400 mt-1 flex items-center gap-0.5">
+                                        방법 보기 <span class="material-symbols-outlined text-[12px]">arrow_forward</span>
+                                    </span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Simulated Photo Camera Feature
+        function simulatedPhotoScan() {
+            showToast("스캔 준비 중... 컵라면 용기가 감지되었습니다!");
+            setTimeout(() => {
+                navigateTo('detail', 2);
+            }, 1000);
+        }
+
+        // 2. Search & List Screen (Fluid Search & Korean Input Guard)
+        function renderSearchList(container, keyword = '') {
+            const filteredItems = getFilteredItems(keyword);
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <!-- Top Search Bar -->
+                    <div class="relative">
+                        <input type="text" id="search-input" value="${keyword}" oninput="handleSearchInput(event)" placeholder="어떤 쓰레기를 버리시나요? (예: 음료수, 라면)" 
+                            class="w-full pl-11 pr-10 py-3.5 bg-white border-2 border-gray-200 rounded-2xl text-sm focus:border-[#fe4e00] focus:outline-none shadow-xs transition">
+                        <span class="material-symbols-outlined absolute left-3.5 top-3.5 text-gray-400">search</span>
+                        <button id="clear-search-btn" onclick="clearSearchInput()" class="${keyword ? '' : 'hidden'} absolute right-3 top-3.5 text-gray-400 hover:text-gray-600">
+                            <span class="material-symbols-outlined text-sm">close</span>
+                        </button>
+                    </div>
+
+                    <!-- Category Pills Filter -->
+                    <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                        <button onclick="navigateTo('search', '')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${keyword === '' ? 'bg-[#fe4e00] text-white' : 'bg-white text-gray-600 border border-gray-200'}">전체</button>
+                        <button onclick="navigateTo('search', '플라스틱')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${keyword === '플라스틱' ? 'bg-[#fe4e00] text-white' : 'bg-white text-gray-600 border border-gray-200'}">플라스틱</button>
+                        <button onclick="navigateTo('search', '종이')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${keyword === '종이' ? 'bg-[#fe4e00] text-white' : 'bg-white text-gray-600 border border-gray-200'}">종이/팩</button>
+                        <button onclick="navigateTo('search', '비닐')" class="px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${keyword === '비닐' ? 'bg-[#fe4e00] text-white' : 'bg-white text-gray-600 border border-gray-200'}">비닐류</button>
+                    </div>
+
+                    <!-- Item List Header -->
+                    <div class="flex justify-between items-center text-xs text-gray-500 px-1">
+                        <span>검색 결과 <b id="result-count" class="text-[#fe4e00] font-bold">${filteredItems.length}</b>개</span>
+                        <span>자주 업데이트됨</span>
+                    </div>
+
+                    <!-- Item List Dynamic Area -->
+                    <div id="search-item-list" class="space-y-2.5">
+                        ${renderItemListHTML(filteredItems)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getFilteredItems(keyword) {
+            return garbageItems.filter(item => 
+                item.name.toLowerCase().includes(keyword.toLowerCase()) || 
+                item.category.toLowerCase().includes(keyword.toLowerCase())
+            );
+        }
+
+        function renderItemListHTML(filteredItems) {
+            if (filteredItems.length > 0) {
+                return filteredItems.map(item => `
+                    <div onclick="navigateTo('detail', ${item.id})" class="bg-white p-4 sm:p-5 rounded-2xl shadow-xs border border-gray-100 hover:border-[#fe4e00] transition active:scale-98 cursor-pointer flex justify-between items-center">
+                        <div class="flex items-center gap-3.5">
+                            <!-- 이미지가 있더라도 실패 시 안 보이게 처리하고 아이콘이나 글자 레이아웃 유지 -->
+                            <div class="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center text-gray-700 shrink-0 overflow-hidden">
+                                ${item.imageUrl ? `<img src="${item.imageUrl}" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" class="w-full h-full object-cover">` : ''}
+                                <span class="material-symbols-outlined" style="${item.imageUrl ? 'display:none;' : ''}">${item.icon || 'delete'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${item.color}">${item.category}</span>
+                                <h4 class="font-bold text-gray-900 text-sm sm:text-base mt-0.5">${item.name}</h4>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="event.stopPropagation(); deleteItem(${item.id})" class="text-gray-300 hover:text-red-500 p-2 rounded-full transition" title="삭제">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                            <span class="material-symbols-outlined text-gray-300 text-lg">chevron_right</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                return `
+                    <div class="bg-white p-8 rounded-3xl text-center space-y-3 border border-gray-100">
+                        <span class="material-symbols-outlined text-5xl text-gray-300">search_off</span>
+                        <p class="text-xs sm:text-sm text-gray-500">찾으시는 쓰레기 분리수거 방법이 없나요?</p>
+                        <button onclick="navigateTo('add')" class="bg-[#ddfcad] text-gray-900 px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-lime-200 transition">
+                            + 직접 방법 등록하기
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function handleSearchInput(e) {
+            const query = e.target.value;
+            const filteredItems = getFilteredItems(query);
+            
+            // DOM 부분 업데이트를 통해 한글 IME 입력 조합 분리 방지
+            const listContainer = document.getElementById('search-item-list');
+            const resultCount = document.getElementById('result-count');
+            const clearBtn = document.getElementById('clear-search-btn');
+
+            if (listContainer) listContainer.innerHTML = renderItemListHTML(filteredItems);
+            if (resultCount) resultCount.innerText = filteredItems.length;
+            if (clearBtn) {
+                if (query) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+            }
+        }
+
+        function clearSearchInput() {
+            const input = document.getElementById('search-input');
+            if (input) {
+                input.value = '';
+                handleSearchInput({ target: input });
+                input.focus();
+            }
+        }
+
+        // 3. Detail View Screen
+        function renderDetail(container, itemId) {
+            const item = garbageItems.find(i => i.id === itemId) || garbageItems[0];
+            currentDetailId = item.id;
+
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <!-- Top Navigation & Actions -->
+                    <div class="flex justify-between items-center">
+                        <button onclick="navigateTo('search')" class="flex items-center gap-1 text-xs text-gray-600 font-bold bg-white px-3.5 py-2 rounded-full border border-gray-200 shadow-2xs active:scale-95 transition">
+                            <span class="material-symbols-outlined text-sm">arrow_back</span> 목록으로
+                        </button>
+                        <button onclick="deleteItem(${item.id})" class="text-red-500 text-xs font-bold bg-red-50 px-3.5 py-2 rounded-full hover:bg-red-100 transition flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">delete</span> 삭제
+                        </button>
+                    </div>
+
+                    <!-- Item Title Box -->
+                    <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xs relative overflow-hidden">
+                        ${item.imageUrl ? `<img src="${item.imageUrl}" alt="" onerror="this.remove();" class="absolute right-4 top-4 w-20 h-20 object-cover rounded-2xl opacity-80">` : ''}
+                        <div class="absolute -right-4 -bottom-4 opacity-10 text-gray-900 pointer-events-none">
+                            <span class="material-symbols-outlined text-9xl">${item.icon || 'eco'}</span>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 rounded-full ${item.color}">${item.category}</span>
+                        <h2 class="text-2xl sm:text-3xl font-black text-gray-900 mt-2">${item.name}</h2>
+                        <p class="text-xs text-gray-500 mt-1">쉬는 시간 전용 올바른 분리배출 단계</p>
+                    </div>
+
+                    <!-- Content Details -->
+                    <div class="bg-white p-6 rounded-3xl shadow-xs border border-gray-100 space-y-4">
+                        <h3 class="font-bold text-gray-800 text-sm sm:text-base flex items-center gap-2 border-b border-gray-100 pb-3">
+                            <span class="material-symbols-outlined text-[#fe4e00]">format_list_numbered</span>
+                            올바른 분리배출 방법
+                        </h3>
+                        <div class="text-xs sm:text-sm text-gray-700 leading-relaxed whitespace-pre-line bg-orange-50/50 p-4 sm:p-5 rounded-2xl border border-orange-100/60 font-medium">
+                            ${item.method}
+                        </div>
+
+                        <!-- Mini Tip Box -->
+                        <div class="bg-[#ddfcad]/40 p-4 sm:p-5 rounded-2xl border border-[#ddfcad] flex gap-3 items-start">
+                            <span class="material-symbols-outlined text-[#9046cf] text-xl shrink-0">lightbulb</span>
+                            <div>
+                                <h4 class="text-xs sm:text-sm font-bold text-[#9046cf]">반 친구들을 위한 핵심 팁</h4>
+                                <p class="text-xs text-gray-800 font-medium mt-0.5">${item.tip}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Feedback Section -->
+                    <div class="bg-white p-5 rounded-3xl shadow-xs border border-gray-100 space-y-3">
+                        <h3 class="font-bold text-gray-800 text-xs sm:text-sm flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base text-[#9046cf]">thumb_up</span>
+                            이 가이드가 도움이 되었나요?
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="sendFeedback('도움이 되었어요!')" class="py-3 bg-gray-50 hover:bg-[#ddfcad] text-gray-900 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border border-gray-200">
+                                👍 완벽해요!
+                            </button>
+                            <button onclick="sendFeedback('추가 정보가 필요해요')" class="py-3 bg-gray-50 hover:bg-orange-100 text-gray-900 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 border border-gray-200">
+                                🤔 헷갈려요
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Send Feedback Handler
+        function sendFeedback(msg) {
+            showToast(`피드백 제출 완료: "${msg}"`);
+        }
+
+        // 4. Add/Input Screen
+        function renderAddForm(container) {
+            container.innerHTML = `
+                <div class="space-y-4">
+                    <div class="bg-white p-6 rounded-3xl shadow-xs border border-gray-100">
+                        <h2 class="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[#fe4e00]">add_circle</span>
+                            새 분리수거 항목 등록
+                        </h2>
+                        <p class="text-xs sm:text-sm text-gray-500 mt-1">우리 반 친구들이 헷갈려하는 쓰레기를 추가해 주세요.</p>
+                    </div>
+
+                    <!-- Input Form -->
+                    <form onsubmit="handleAddSubmit(event)" class="bg-white p-6 rounded-3xl shadow-xs border border-gray-100 space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">쓰레기 품목 이름 *</label>
+                            <input type="text" id="input-name" required placeholder="예: 삼각김밥 비닐, 젤리 껍질" 
+                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:border-[#fe4e00] focus:bg-white focus:outline-none transition">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">분류 카테고리 *</label>
+                            <select id="input-category" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:border-[#fe4e00] focus:bg-white focus:outline-none transition">
+                                <option value="플라스틱">플라스틱</option>
+                                <option value="종이류">종이류</option>
+                                <option value="종이팩">종이팩</option>
+                                <option value="비닐류">비닐류</option>
+                                <option value="캔/고철">캔 / 고철</option>
+                                <option value="일반쓰레기">일반쓰레기</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">분리수거 방법 설명 *</label>
+                            <textarea id="input-method" required rows="4" placeholder="1. 이물질 제거&#10;2. 분류하여 지정된 수거함에 배출" 
+                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:border-[#fe4e00] focus:bg-white focus:outline-none transition"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1.5">주의사항 / 꿀팁</label>
+                            <input type="text" id="input-tip" placeholder="예: 스티커는 꼭 제거하고 버려주세요!" 
+                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs sm:text-sm focus:border-[#fe4e00] focus:bg-white focus:outline-none transition">
+                        </div>
+
+                        <!-- Touch-Friendly Submit Button -->
+                        <button type="submit" class="w-full py-3.5 bg-[#fe4e00] text-white rounded-2xl font-bold text-sm hover:bg-orange-600 active:scale-98 transition shadow-sm flex items-center justify-center gap-1.5 mt-2">
+                            <span class="material-symbols-outlined text-lg">add</span>
+                            등록하기
+                        </button>
+                    </form>
+                </div>
+            `;
+        }
+
+        // Add Item Form Submit Logic
+        function handleAddSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('input-name').value;
+            const category = document.getElementById('input-category').value;
+            const method = document.getElementById('input-method').value;
+            const tip = document.getElementById('input-tip').value || "정확한 방법으로 환경을 함께 지켜요!";
+
+            const newItem = {
+                id: Date.now(),
+                name: name,
+                category: category,
+                method: method,
+                tip: tip,
+                color: "bg-orange-100 text-orange-800",
+                icon: "delete"
+            };
+
+            garbageItems.unshift(newItem);
+            showToast("새 항목이 성공적으로 등록되었습니다!");
+            navigateTo('detail', newItem.id);
+        }
+
+        // Delete Item Logic
+        function deleteItem(itemId) {
+            garbageItems = garbageItems.filter(i => i.id !== itemId);
+            showToast("항목이 삭제되었습니다.");
+            navigateTo('search');
+        }
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            navigateTo('home');
+        };
+    </script>
+</body>
+</html>
